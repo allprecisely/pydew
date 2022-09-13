@@ -15,7 +15,7 @@ class Level:
     def setup(self):
         self.player = Player(pos=(640, 360), group=self.all_sprites)
 
-    def run(self, dt):
+    def run(self, dt, events):
         self.display_surface.fill('black')
         self.all_sprites.draw(self.display_surface)
-        self.all_sprites.update(dt)
+        self.all_sprites.update(dt, events)
