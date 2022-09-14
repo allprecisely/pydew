@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pygame
 
-# from settings import pass
+from settings import LAYERS
 from support import import_folder
 from timer import Timer
 
@@ -17,6 +17,7 @@ class Player(pygame.sprite.Sprite):
 
         self.image = self.animations[self.status][self.frame_index]
         self.rect = self.image.get_rect(center=pos)
+        self.z = LAYERS['main']
 
         self.direction = pygame.math.Vector2()
         self.pos = pygame.math.Vector2(self.rect.center)
