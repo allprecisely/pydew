@@ -8,6 +8,7 @@ OVERLAY_POSITIONS = {
 }
 
 LAYERS = {
+    'water': 0,
     'ground': 1,
     'house bottom': 5,
     'main': 7,
@@ -15,8 +16,7 @@ LAYERS = {
 }
 
 TMX_LAYERS = {
-    'ground': 1,
-    'house bottom': 5,
-    'main': 7,
-    'house top': 8,
+    'house bottom': ['HouseFloor', 'HouseFurnitureBottom'],
+    'main': ['Fence'],
+    'house top': ['HouseWalls', 'HouseFurnitureTop'],
 }
