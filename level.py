@@ -3,11 +3,12 @@ from typing import Sequence, Union
 
 import pygame
 from pygame.sprite import Group, Sprite
+from pytmx.util_pygame import load_pygame
 
 from overlay import Overlay
 from player import Player
 from sprites import Generic
-from settings import LAYERS, SCREEN_HEIGHT, SCREEN_WIDTH
+from settings import LAYERS, SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE
 
 
 class Level:
@@ -20,6 +21,26 @@ class Level:
         self.overlay = Overlay(self.player)
 
     def setup(self):
+        tmx_data = load_pygame(Path('assets', 'data', 'map.tmx'))
+
+        for layer in ['HouseFloor', 'HouseFurnitureBottom']:
+            for x, y, surf in tmx_data.get_layer_by_name(layer).tiles():
+                Generic(
+                    (x * TILE_SIZE, y * TILE_SIZE),
+                    surf,
+                    self.all_sprites,
+                    LAYERS['house bottom']
+                )
+
+        for layer in ['HouseWalls', 'HouseFurnitureTop']:
+            for x, y, surf in tmx_data.get_layer_by_name(layer).tiles():
+                Generic(
+                    (x * TILE_SIZE, y * TILE_SIZE),
+                    surf,
+                    self.all_sprites,
+                    LAYERS['house bottom']
+                )
+
         Generic(
             pos=(0, 0),
             surf=pygame.image.load(Path('assets', 'graphics', 'world', 'ground.png')).convert_alpha(),
