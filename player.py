@@ -9,7 +9,13 @@ from timer import Timer
 
 class Player(pygame.sprite.Sprite):
     def __init__(
-        self, pos, group, collision_sprites, tree_sprites, interaction_sprites
+        self,
+        pos,
+        group,
+        collision_sprites,
+        tree_sprites,
+        interaction_sprites,
+        soil_layer,
     ):
         super().__init__(group)
 
@@ -51,16 +57,17 @@ class Player(pygame.sprite.Sprite):
         self.tree_sprites = tree_sprites
         self.interaction_sprites = interaction_sprites
         self.sleep = False
+        self.soil_layer = soil_layer
 
     def use_tool(self):
         if self.selected_tool == 'hoe':
-            pass
+            self.soil_layer.get_hit(self.target_pos)
         elif self.selected_tool == 'axe':
             for tree in self.tree_sprites.sprites():
                 if tree.rect.collidepoint(self.target_pos):
                     tree.damage()
         elif self.selected_tool == 'water':
-            pass
+            self.soil_layer.water(self.target_pos)
 
     def get_target_position(self):
         self.target_pos = (
@@ -142,7 +149,9 @@ class Player(pygame.sprite.Sprite):
                     self, self.interaction_sprites, False
                 )
                 if collided_interaction_sprite:
-                    if (collided_sprite_name := collided_interaction_sprite[0].name) == 'Trader':
+                    if (
+                        collided_sprite_name := collided_interaction_sprite[0].name
+                    ) == 'Trader':
                         pass
                     elif collided_sprite_name == 'Bed':
                         self.status = 'left_idle'

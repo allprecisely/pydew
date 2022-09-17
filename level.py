@@ -7,8 +7,9 @@ from pytmx.util_pygame import load_pygame
 
 from overlay import Overlay
 from player import Player
-from sprites import Generic, Interaction, Tree, Water
 from settings import LAYERS, SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE, TMX_LAYERS
+from soil import SoilLayer
+from sprites import Generic, Interaction, Tree, Water
 from support import import_folder
 from transition import Transition
 
@@ -22,13 +23,13 @@ class Level:
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
 
-        self.setup()
+        tmx_data = load_pygame(Path('assets', 'data', 'map.tmx'))
+        self.soil_layer = SoilLayer(self.all_sprites, tmx_data)
+        self.setup(tmx_data)
         self.overlay = Overlay(self.player)
         self.transition = Transition(self.reset, self.player)
 
-    def setup(self):
-        tmx_data = load_pygame(Path('assets', 'data', 'map.tmx'))
-
+    def setup(self, tmx_data):
         Generic(
             pos=(0, 0),
             surf=pygame.image.load(
@@ -92,6 +93,7 @@ class Level:
                     self.collision_sprites,
                     self.tree_sprites,
                     self.interaction_sprites,
+                    self.soil_layer,
                 )
             elif obj.name == 'Bed':
                 Interaction(
@@ -105,6 +107,8 @@ class Level:
         self.player.item_inventory[item] += 1
 
     def reset(self):
+        self.soil_layer.remove_water()
+
         for tree in self.tree_sprites.sprites():
             for apple in tree.apple_sprites.sprites():
                 apple.kill()
