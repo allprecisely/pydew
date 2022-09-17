@@ -8,7 +8,9 @@ from timer import Timer
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, collision_sprites, tree_sprites):
+    def __init__(
+        self, pos, group, collision_sprites, tree_sprites, interaction_sprites
+    ):
         super().__init__(group)
 
         self.import_assets()
@@ -47,6 +49,8 @@ class Player(pygame.sprite.Sprite):
         self.collision_sprites = collision_sprites
 
         self.tree_sprites = tree_sprites
+        self.interaction_sprites = interaction_sprites
+        self.sleep = False
 
     def use_tool(self):
         if self.selected_tool == 'hoe':
@@ -59,18 +63,35 @@ class Player(pygame.sprite.Sprite):
             pass
 
     def get_target_position(self):
-        self.target_pos = self.rect.center + PLAYER_TOOL_OFFSET[self.status.split('_')[0]]
+        self.target_pos = (
+            self.rect.center + PLAYER_TOOL_OFFSET[self.status.split('_')[0]]
+        )
 
     def use_seed(self):
         pass
 
     def import_assets(self):
         self.animations = {
-            'up': [], 'down': [], 'left': [], 'right': [],
-            'up_idle': [], 'down_idle': [], 'left_idle': [], 'right_idle': [],
-            'up_axe': [], 'down_axe': [], 'left_axe': [], 'right_axe': [],
-            'up_water': [], 'down_water': [], 'left_water': [], 'right_water': [],
-            'up_hoe': [], 'down_hoe': [], 'left_hoe': [], 'right_hoe': [],
+            'up': [],
+            'down': [],
+            'left': [],
+            'right': [],
+            'up_idle': [],
+            'down_idle': [],
+            'left_idle': [],
+            'right_idle': [],
+            'up_axe': [],
+            'down_axe': [],
+            'left_axe': [],
+            'right_axe': [],
+            'up_water': [],
+            'down_water': [],
+            'left_water': [],
+            'right_water': [],
+            'up_hoe': [],
+            'down_hoe': [],
+            'left_hoe': [],
+            'right_hoe': [],
         }
 
         for animation in self.animations:
@@ -87,7 +108,7 @@ class Player(pygame.sprite.Sprite):
     def input(self, events):
         keys = pygame.key.get_pressed()
 
-        if not any(t.active for t in self.timers.values()):
+        if not any(t.active for t in self.timers.values()) and not self.sleep:
             if keys[pygame.K_UP]:
                 self.direction.y = -1
                 self.status = 'up'
@@ -110,17 +131,28 @@ class Player(pygame.sprite.Sprite):
                 self.timers['tool_use'].activate()
                 self.direction = pygame.math.Vector2()
                 self.frame_index = 0
-            
+
             if keys[pygame.K_LCTRL]:
                 self.timers['seed_use'].activate()
                 self.direction = pygame.math.Vector2()
                 self.frame_index = 0
 
+            if keys[pygame.K_RETURN]:
+                collided_interaction_sprite = pygame.sprite.spritecollide(
+                    self, self.interaction_sprites, False
+                )
+                if collided_interaction_sprite:
+                    if (collided_sprite_name := collided_interaction_sprite[0].name) == 'Trader':
+                        pass
+                    elif collided_sprite_name == 'Bed':
+                        self.status = 'left_idle'
+                        self.sleep = True
+
             for event in events:
                 if event.type == pygame.KEYUP and event.key == pygame.K_q:
                     self.tool_index = (self.tool_index + 1) % len(self.tools)
                     self.selected_tool = self.tools[self.tool_index]
-                
+
                 if event.type == pygame.KEYUP and event.key == pygame.K_e:
                     self.seed_index = (self.seed_index + 1) % len(self.seeds)
                     self.selected_seed = self.seeds[self.seed_index]
@@ -144,7 +176,7 @@ class Player(pygame.sprite.Sprite):
                             self.hitbox.left = sprite.hitbox.right
                         self.rect.centerx = self.hitbox.centerx
                         self.pos.x = self.hitbox.centerx
-                    
+
                     if direction == 'vertical':
                         if self.direction.y > 0:
                             self.hitbox.bottom = sprite.hitbox.top

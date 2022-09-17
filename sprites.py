@@ -18,6 +18,13 @@ class Generic(pygame.sprite.Sprite):
         )
 
 
+class Interaction(Generic):
+    def __init__(self, pos, size, groups, name) -> None:
+        surf = pygame.Surface(size)
+        super().__init__(pos, surf, groups)
+        self.name = name
+
+
 class Water(Generic):
     def __init__(self, pos, frames, groups) -> None:
         self.frames = frames
@@ -101,7 +108,8 @@ class Tree(Generic):
             self.player_add('wood')
 
     def update(self, dt, events):
-        self.check_death()
+        if self.alive:
+            self.check_death()
 
     def create_fruit(self):
         for x, y in self.apple_pos:
