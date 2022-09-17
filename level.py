@@ -17,6 +17,8 @@ class Level:
         self.display_surface = pygame.display.get_surface()
 
         self.all_sprites = CameraGroup()
+        self.collision_sprites = pygame.sprite.Group()
+        self.tree_sprites = pygame.sprite.Group()
 
         self.setup()
         self.overlay = Overlay(self.player)
@@ -43,11 +45,26 @@ class Level:
                         LAYERS[tmx],
                     )
 
+        for x, y, surf in tmx_data.get_layer_by_name('Fence').tiles():
+            Generic(
+                (x * TILE_SIZE, y * TILE_SIZE),
+                surf,
+                [self.all_sprites, self.collision_sprites],
+            )
+
         for obj in tmx_data.get_layer_by_name('Decoration'):
-            Generic((obj.x, obj.y), obj.image, self.all_sprites)
+            Generic(
+                (obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites]
+            )
 
         for obj in tmx_data.get_layer_by_name('Trees'):
-            Tree((obj.x, obj.y), obj.image, self.all_sprites, obj.name)
+            Tree(
+                (obj.x, obj.y),
+                obj.image,
+                [self.all_sprites, self.collision_sprites, self.tree_sprites],
+                obj.name,
+                player_add = self.player_add
+            )
 
         water_frames = import_folder(Path('assets', 'graphics', 'water'))
         for x, y, surf in tmx_data.get_layer_by_name('Water').tiles():
@@ -57,10 +74,24 @@ class Level:
                 self.all_sprites,
             )
 
-        self.player = Player(pos=(640, 360), group=self.all_sprites)
+        for x, y, surf in tmx_data.get_layer_by_name('Collision').tiles():
+            Generic(
+                (x * TILE_SIZE, y * TILE_SIZE),
+                pygame.Surface((TILE_SIZE, TILE_SIZE)),
+                self.collision_sprites,
+            )
+
+        for obj in tmx_data.get_layer_by_name('Player'):
+            if obj.name == 'Start':
+                self.player = Player(
+                    (obj.x, obj.y), self.all_sprites, self.collision_sprites, self.tree_sprites,
+                )
+                break
+
+    def player_add(self, item):
+        self.player.item_inventory[item] += 1
 
     def run(self, dt, events):
-        self.display_surface.fill('black')
         self.all_sprites.custom_draw(self.player)
         self.all_sprites.update(dt, events)
 
