@@ -4,12 +4,14 @@ import pygame
 
 
 def import_folder(path: Path):
-    surface_list = []
-    for image in path.iterdir():
-        image_surf = pygame.image.load(image).convert_alpha()
-        surface_list.append(image_surf)
-    return surface_list
+    return [pygame.image.load(f).convert_alpha() for f in sorted(path.iterdir())]
 
 
 def import_folder_dict(path: Path):
     return {f.stem: pygame.image.load(f).convert_alpha() for f in path.iterdir()}
+
+
+def import_collections(path: Path):
+    return {
+        _path.stem: import_folder(_path) for _path in path.iterdir() if _path.is_dir()
+    }

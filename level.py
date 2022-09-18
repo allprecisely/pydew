@@ -9,9 +9,9 @@ from pytmx.util_pygame import load_pygame
 from overlay import Overlay
 from player import Player
 from settings import LAYERS, SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE, TMX_LAYERS
-from sky import Rain
+from sky import Rain, Sky
 from soil import SoilLayer
-from sprites import Generic, Interaction, Tree, Water
+from sprites import Generic, Interaction, Particle, Tree, Water
 from support import import_folder
 from transition import Transition
 
@@ -36,6 +36,7 @@ class Level:
         self.rain = Rain(self.all_sprites, ground_surf)
         self.raining = random.randint(0, 5) == 0
         self.soil_layer.raining = self.raining
+        self.sky = Sky()
 
     def setup(self, tmx_data, ground_surf):
         Generic((0, 0), ground_surf, self.all_sprites, LAYERS['ground'])
@@ -108,7 +109,10 @@ class Level:
         self.player.item_inventory[item] += 1
 
     def reset(self):
-        self.raining = random.randint(0, 5) == 0
+        self.sky.start_color = [255, 255, 255]
+        self.soil_layer.update_plants()
+
+        self.raining = random.randint(0, 5) >= 0
         self.soil_layer.raining = self.raining
         if self.raining:
             self.soil_layer.water_all()
@@ -120,14 +124,25 @@ class Level:
                 apple.kill()
             tree.create_fruit()
 
+    def plant_collision(self):
+        for plant in self.soil_layer.plant_sprites.sprites():
+            if plant.harvestable and plant.rect.colliderect(self.player.hitbox):
+                self.player_add(plant.plant_type)
+                plant.kill()
+                Particle(plant.rect.topleft, plant.image, self.all_sprites, LAYERS['main'])
+                self.soil_layer.grid[plant.rect.centery // TILE_SIZE][plant.rect.centerx // TILE_SIZE].remove('P')
+
     def run(self, dt, events):
         self.all_sprites.custom_draw(self.player)
         self.all_sprites.update(dt, events)
+        self.plant_collision()
 
         self.overlay.display()
 
         if self.raining:
             self.rain.update()
+
+        self.sky.display(dt)
 
         if self.player.sleep:
             self.transition.play(dt)

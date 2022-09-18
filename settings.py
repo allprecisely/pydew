@@ -41,3 +41,7 @@ APPLE_POS = {
 }
 
 SOIL_MAP = {(0, 1): 'b', (-1, 0): 'l', (1, 0): 'r', (0, -1): 't'}
+
+GROW_SPEED = {'corn': 1, 'tomato': 0.7}
+
+PLANT_Y_OFFSET = {'corn': -16, 'tomato': -8}
