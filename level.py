@@ -1,4 +1,5 @@
 from pathlib import Path
+import random
 from typing import Sequence, Union
 
 import pygame
@@ -8,6 +9,7 @@ from pytmx.util_pygame import load_pygame
 from overlay import Overlay
 from player import Player
 from settings import LAYERS, SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE, TMX_LAYERS
+from sky import Rain
 from soil import SoilLayer
 from sprites import Generic, Interaction, Tree, Water
 from support import import_folder
@@ -24,20 +26,19 @@ class Level:
         self.interaction_sprites = pygame.sprite.Group()
 
         tmx_data = load_pygame(Path('assets', 'data', 'map.tmx'))
+        ground_surf = pygame.image.load(
+            Path('assets', 'graphics', 'world', 'ground.png')
+        ).convert_alpha()
         self.soil_layer = SoilLayer(self.all_sprites, tmx_data)
-        self.setup(tmx_data)
+        self.setup(tmx_data, ground_surf)
         self.overlay = Overlay(self.player)
         self.transition = Transition(self.reset, self.player)
+        self.rain = Rain(self.all_sprites, ground_surf)
+        self.raining = random.randint(0, 5) == 0
+        self.soil_layer.raining = self.raining
 
-    def setup(self, tmx_data):
-        Generic(
-            pos=(0, 0),
-            surf=pygame.image.load(
-                Path('assets', 'graphics', 'world', 'ground.png')
-            ).convert_alpha(),
-            groups=self.all_sprites,
-            z=LAYERS['ground'],
-        )
+    def setup(self, tmx_data, ground_surf):
+        Generic((0, 0), ground_surf, self.all_sprites, LAYERS['ground'])
 
         for tmx, layers in TMX_LAYERS.items():
             for layer in layers:
@@ -107,7 +108,12 @@ class Level:
         self.player.item_inventory[item] += 1
 
     def reset(self):
-        self.soil_layer.remove_water()
+        self.raining = random.randint(0, 5) == 0
+        self.soil_layer.raining = self.raining
+        if self.raining:
+            self.soil_layer.water_all()
+        else:
+            self.soil_layer.remove_water()
 
         for tree in self.tree_sprites.sprites():
             for apple in tree.apple_sprites.sprites():
@@ -119,6 +125,9 @@ class Level:
         self.all_sprites.update(dt, events)
 
         self.overlay.display()
+
+        if self.raining:
+            self.rain.update()
 
         if self.player.sleep:
             self.transition.play(dt)
