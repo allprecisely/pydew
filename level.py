@@ -6,6 +6,7 @@ import pygame
 from pygame.sprite import Group, Sprite
 from pytmx.util_pygame import load_pygame
 
+from menu import Menu
 from overlay import Overlay
 from player import Player
 from settings import LAYERS, SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE, TMX_LAYERS
@@ -37,6 +38,10 @@ class Level:
         self.raining = random.randint(0, 5) == 0
         self.soil_layer.raining = self.raining
         self.sky = Sky()
+
+        # shop
+        self.menu = Menu(self.player, self.toggle_shop)
+        self.shop_active = False
 
     def setup(self, tmx_data, ground_surf):
         Generic((0, 0), ground_surf, self.all_sprites, LAYERS['ground'])
@@ -96,8 +101,16 @@ class Level:
                     self.tree_sprites,
                     self.interaction_sprites,
                     self.soil_layer,
+                    self.toggle_shop,
                 )
             elif obj.name == 'Bed':
+                Interaction(
+                    (obj.x, obj.y),
+                    (obj.width, obj.height),
+                    self.interaction_sprites,
+                    obj.name,
+                )
+            elif obj.name == 'Trader':
                 Interaction(
                     (obj.x, obj.y),
                     (obj.width, obj.height),
@@ -107,6 +120,9 @@ class Level:
 
     def player_add(self, item):
         self.player.item_inventory[item] += 1
+
+    def toggle_shop(self):
+        self.shop_active = not self.shop_active
 
     def reset(self):
         self.sky.start_color = [255, 255, 255]
@@ -129,19 +145,29 @@ class Level:
             if plant.harvestable and plant.rect.colliderect(self.player.hitbox):
                 self.player_add(plant.plant_type)
                 plant.kill()
-                Particle(plant.rect.topleft, plant.image, self.all_sprites, LAYERS['main'])
-                self.soil_layer.grid[plant.rect.centery // TILE_SIZE][plant.rect.centerx // TILE_SIZE].remove('P')
+                Particle(
+                    plant.rect.topleft, plant.image, self.all_sprites, LAYERS['main']
+                )
+                self.soil_layer.grid[plant.rect.centery // TILE_SIZE][
+                    plant.rect.centerx // TILE_SIZE
+                ].remove('P')
 
     def run(self, dt, events):
+        # drawing logic
         self.all_sprites.custom_draw(self.player)
-        self.all_sprites.update(dt, events)
-        self.plant_collision()
 
+        # updates
+        if self.shop_active:
+            self.menu.update(events)
+        else:
+            self.all_sprites.update(dt, events)
+            self.plant_collision()
+
+        # weather
         self.overlay.display()
 
-        if self.raining:
+        if self.raining and not self.shop_active:
             self.rain.update()
-
         self.sky.display(dt)
 
         if self.player.sleep:
