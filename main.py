@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 
 import pygame
@@ -21,7 +22,7 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                
+
             dt = self.clock.tick() / 1000
             self.level.run(dt, events)
             pygame.display.update()

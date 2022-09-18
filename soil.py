@@ -66,6 +66,14 @@ class SoilLayer:
         self.create_soil_grid(tmx_data)
         self.create_hit_rects()
 
+        # sounds
+        self.hoe_sound = pygame.mixer.Sound(Path('assets', 'audio', 'hoe.wav'))
+        self.hoe_sound.set_volume(0.1)
+        self.watering = pygame.mixer.Sound(Path('assets', 'audio', 'water.mp3'))
+        self.watering.set_volume(0.2)
+        self.plant_sound = pygame.mixer.Sound(Path('assets', 'audio', 'plant.wav'))
+        self.plant_sound.set_volume(0.2)
+
     def create_soil_grid(self, tmx_data):
         ground = pygame.image.load(Path('assets', 'graphics', 'world', 'ground.png'))
         h_tiles, v_tiles = (
@@ -91,6 +99,7 @@ class SoilLayer:
             if rect.collidepoint(point):
                 x, y = rect.x // TILE_SIZE, rect.y // TILE_SIZE
                 if 'F' in self.grid[y][x]:
+                    self.hoe_sound.play()
                     self.grid[y][x].add('X')
                     self.create_soil_tiles()
                     if self.raining:
@@ -115,6 +124,7 @@ class SoilLayer:
     def water(self, point):
         for soil_sprite in self.soil_sprites.sprites():
             if soil_sprite.rect.collidepoint(point):
+                self.watering.play()
                 x, y = soil_sprite.rect.x // TILE_SIZE, soil_sprite.rect.y // TILE_SIZE
                 self.grid[y][x].add('W')
                 SoilTile(
@@ -156,6 +166,7 @@ class SoilLayer:
             if soil_sprite.rect.collidepoint(target_pos):
                 x, y = soil_sprite.rect.x // TILE_SIZE, soil_sprite.rect.y // TILE_SIZE
                 if 'P' not in self.grid[y][x]:
+                    self.plant_sound.play()
                     self.grid[y][x].add('P')
                     Plant(
                         [self.all_sprites, self.plant_sprites],

@@ -43,6 +43,13 @@ class Level:
         self.menu = Menu(self.player, self.toggle_shop)
         self.shop_active = False
 
+        # sounds
+        self.success = pygame.mixer.Sound(Path('assets', 'audio', 'success.wav'))
+        self.success.set_volume(0.2)
+        self.main_music = pygame.mixer.Sound(Path('assets', 'audio', 'music.mp3'))
+        self.main_music.set_volume(0.2)
+        self.main_music.play(loops=-1)
+
     def setup(self, tmx_data, ground_surf):
         Generic((0, 0), ground_surf, self.all_sprites, LAYERS['ground'])
 
@@ -120,6 +127,7 @@ class Level:
 
     def player_add(self, item):
         self.player.item_inventory[item] += 1
+        self.success.play()
 
     def toggle_shop(self):
         self.shop_active = not self.shop_active
@@ -128,7 +136,7 @@ class Level:
         self.sky.start_color = [255, 255, 255]
         self.soil_layer.update_plants()
 
-        self.raining = random.randint(0, 5) >= 0
+        self.raining = random.randint(0, 5) == 0
         self.soil_layer.raining = self.raining
         if self.raining:
             self.soil_layer.water_all()

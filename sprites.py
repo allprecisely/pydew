@@ -83,7 +83,14 @@ class Tree(Generic):
 
         self.player_add = player_add
 
+        # sounds
+        self.axe_sound = pygame.mixer.Sound(Path('assets', 'audio', 'axe.mp3'))
+
     def damage(self):
+
+        # play sound
+        self.axe_sound.play()
+
         self.health -= 1
         if len(sprites := self.apple_sprites.sprites()) > 0:
             random_apple = choice(sprites)
